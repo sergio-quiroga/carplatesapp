@@ -67,10 +67,11 @@
       <p class="modal-question">¿Quién vio esta patente?</p>
       <div class="modal-options" id="modal-options"></div>
 
-      <div class="modal-dates" id="modal-dates" hidden>
-        <p>Primera vez marcada: <strong id="date-first"></strong></p>
-        <p>Última modificación: <strong id="date-last"></strong></p>
-      </div>
+      <!-- One line per player who marked this plate, in the order they did. -->
+      <section class="modal-dates" id="modal-dates" aria-labelledby="modal-dates-title" hidden>
+        <h3 class="modal-dates-title" id="modal-dates-title">Fechas de avistamiento</h3>
+        <ul class="modal-dates-list" id="modal-dates-list"></ul>
+      </section>
 
       <p class="modal-empty" id="modal-loading" hidden>Cargando…</p>
       <p class="modal-empty" id="modal-empty">Nadie ha visto todavía una patente de este estado.</p>

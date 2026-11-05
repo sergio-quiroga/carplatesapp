@@ -19,8 +19,7 @@
   const stateNameEl = document.getElementById("modal-state-name");
   const optionsBox = document.getElementById("modal-options");
   const datesBox = document.getElementById("modal-dates");
-  const dateFirst = document.getElementById("date-first");
-  const dateLast = document.getElementById("date-last");
+  const datesList = document.getElementById("modal-dates-list");
   const emptyMsg = document.getElementById("modal-empty");
   const loadingMsg = document.getElementById("modal-loading");
 
@@ -133,20 +132,37 @@
     loadingMsg.hidden = false;
   }
 
+  // One line per player who has marked the plate, oldest mark first.
+  function renderDates(detail) {
+    const lines = detail.players
+      .filter((p) => p.seen)
+      .sort((a, b) => new Date(a.first_seen) - new Date(b.first_seen))
+      .map((p) => {
+        const li = document.createElement("li");
+        li.className = "modal-date";
+
+        const name = document.createElement("span");
+        name.className = "modal-date-name";
+        name.textContent = p.name;
+
+        const date = document.createElement("time");
+        date.className = "modal-date-when";
+        date.dateTime = p.first_seen;
+        date.textContent = dateFormatter.format(new Date(p.first_seen));
+
+        li.append(legend.avatar(p), name, date);
+        return li;
+      });
+    datesList.replaceChildren(...lines);
+    datesBox.hidden = lines.length === 0;
+    emptyMsg.hidden = lines.length > 0;
+  }
+
   function renderDetail(detail) {
     currentDetail = detail;
     renderOptions(detail);
     loadingMsg.hidden = true;
-
-    if (detail.first_seen) {
-      datesBox.hidden = false;
-      emptyMsg.hidden = true;
-      dateFirst.textContent = dateFormatter.format(new Date(detail.first_seen));
-      dateLast.textContent = dateFormatter.format(new Date(detail.last_modified));
-    } else {
-      datesBox.hidden = true;
-      emptyMsg.hidden = false;
-    }
+    renderDates(detail);
   }
 
   function summaryFromDetail(detail) {

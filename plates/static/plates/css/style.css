@@ -569,12 +569,46 @@ main {
   text-align: left;
   background: var(--color-bg-soft);
   border-radius: var(--radius-sm);
-  padding: 0.6rem 0.8rem;
-  margin-top: 0.5rem;
+  padding: 0.5rem 0.8rem;
+  margin: 0.5rem 0 0;
 }
 
-.modal-dates p {
-  margin: 0.15rem 0;
+.modal-dates-title {
+  margin: 0.1rem 0 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-muted);
+}
+
+.modal-dates-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.modal-date {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0;
+}
+
+.modal-date .avatar {
+  font-size: 1rem;
+}
+
+.modal-date-name {
+  font-weight: 700;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.modal-date-when {
+  margin-left: auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .modal-empty {
