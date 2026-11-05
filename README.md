@@ -1,8 +1,9 @@
-# USA Car Plates 🇺🇸💛
+# USA Car Plates 🇺🇸🚗
 
-Sitio personal para llevar el registro de las patentes de autos de cada
-estado de EEUU que hemos visto en la calle. Mapa interactivo, sin login,
-con un selector simple de "Él / Ella".
+Juego para cualquier grupo (amigos, familia, niños en un viaje en auto):
+registrar las patentes de cada estado de EEUU que cada jugador ha visto en
+la calle. Mapa interactivo, sin login. Al abrir la app por primera vez se
+pregunta cuántos jugadores hay y sus nombres.
 
 ## Stack
 
@@ -20,20 +21,35 @@ con un selector simple de "Él / Ella".
 
 ## Modelo de datos
 
-- `State`: los 50 estados + DC (código postal, nombre, FIPS).
-- `Sighting`: una fila por `(state, person)` con `first_seen` y
+- `State`: los 50 estados (código postal, nombre, FIPS). Washington D.C. no
+  es parte del juego: el mapa lo dibuja en gris y sin clic.
+- `Player`: los jugadores (nombre único sin distinguir mayúsculas, una cara
+  emoji como `avatar` y `position` para el orden). Las caras permitidas están
+  en `plates/avatars.py`. Se crean todos juntos en la configuración
+  inicial (máximo 12).
+- `Sighting`: una fila por `(state, player)` con `first_seen` y
   `last_modified`. No se guarda historial completo, solo el flag actual
   (existe la fila = visto) y sus dos fechas.
 
-El color de cada estado en el mapa se deriva de qué filas de `Sighting`
-existen para ese estado:
+Las reglas del juego (estado del mapa, configuración, marcar/desmarcar,
+reinicio) viven en `plates/services.py`; vistas y serializers solo las usan.
 
-| Filas existentes | Color   |
-|-------------------|---------|
-| Ninguna            | Gris    |
-| Solo `EL`           | Azul    |
-| Solo `ELLA`         | Rosado  |
-| `EL` y `ELLA`        | Verde   |
+El color de cada estado en el mapa se deriva de cuántos jugadores lo vieron:
+
+| Jugadores que lo vieron | `status` | Color    |
+|-------------------------|----------|----------|
+| Ninguno                 | `none`   | Gris     |
+| Algunos                 | `some`   | Amarillo |
+| Todos                   | `all`    | Verde    |
+
+Debajo del mapa la leyenda muestra "Sin ver", cada jugador con cuántas
+patentes ha visto, y "Todos".
+
+Para volver a la pantalla inicial de jugadores (borra jugadores y patentes):
+
+```bash
+python manage.py reset_game
+```
 
 ## Desarrollo local (VSCode)
 
@@ -47,7 +63,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 python manage.py migrate
-python manage.py seed_states     # carga/actualiza los 50 estados + DC
+python manage.py seed_states     # carga/actualiza los 50 estados
 python manage.py runserver
 ```
 
@@ -116,17 +132,24 @@ docker compose up -d --build
 usaplates/
 ├── config/                  # settings, urls, wsgi del proyecto Django
 ├── plates/                  # app principal
-│   ├── models.py            # State, Sighting
+│   ├── models.py            # State, Player, Sighting
+│   ├── services.py          # reglas del juego (status, setup, marcar, reset)
+│   ├── avatars.py           # catálogo de caras emoji para los jugadores
 │   ├── serializers.py       # DRF serializers
 │   ├── views.py             # vistas de API + vista index
 │   ├── urls.py
-│   ├── fixtures/states.json # los 50 estados + DC
-│   ├── management/commands/seed_states.py
+│   ├── fixtures/states.json # los 50 estados
+│   ├── management/commands/
+│   │   ├── seed_states.py
+│   │   └── reset_game.py    # borra jugadores y patentes
 │   ├── templates/plates/index.html
 │   └── static/plates/
 │       ├── css/style.css
+│       ├── js/api.js        # cliente de la API REST
 │       ├── js/map.js        # renderizado del mapa D3 + zoom/pan
-│       ├── js/app.js        # selector El/Ella, modal, llamadas a la API
+│       ├── js/legend.js     # leyenda / marcador bajo el mapa
+│       ├── js/setup.js      # modal inicial: cantidad, nombres y caras
+│       ├── js/app.js        # orquestación, modal de estado, sincronización
 │       ├── vendor/          # d3.min.js, topojson-client.min.js
 │       └── data/            # states-albers-10m.json (topojson)
 ├── docker/entrypoint.sh
@@ -138,17 +161,22 @@ usaplates/
 
 ## API
 
-- `GET /api/states/` — lista de estados con su `status` (`none|him|her|both`).
-- `GET /api/states/<code>/` — detalle de un estado: estado de `him`/`her`
-  (con sus fechas) y `first_seen`/`last_modified` combinados.
-- `PUT /api/states/<code>/sightings/<el|ella>/` — marca una patente como
-  vista por esa persona (idempotente).
-- `DELETE /api/states/<code>/sightings/<el|ella>/` — elimina la marca.
+- `GET /api/players/` — lista de jugadores en orden (`[]` si aún no se configuran).
+- `POST /api/players/` — configuración inicial:
+  `{"players": [{"name": "Ana", "avatar": "🤠"}, {"name": "Beto", "avatar": "🤓"}]}`.
+  Responde `409` si ya hay jugadores.
+- `GET /api/states/` — lista de estados con su `status` (`none|some|all`)
+  y `seen_by` (ids de los jugadores que lo vieron).
+- `GET /api/states/<code>/` — detalle de un estado: `players` (cada uno con
+  `seen` y sus fechas) y `first_seen`/`last_modified` combinados.
+- `PUT /api/states/<code>/sightings/<player_id>/` — marca una patente como
+  vista por ese jugador (idempotente).
+- `DELETE /api/states/<code>/sightings/<player_id>/` — elimina la marca.
 
 ## Nota sobre la imagen de la patente en el modal
 
 En vez de usar fotos reales de patentes de cada estado (temas de licencias
-de imagen y mantenimiento de 51 archivos), el modal genera una "patente"
+de imagen y mantenimiento de 50 archivos), el modal genera una "patente"
 genérica con CSS mostrando el nombre del estado. Si más adelante quieren
 reemplazarla por diseños reales por estado, basta con cambiar el bloque
 `.plate` en `index.html`/`style.css` por un `<img>` por estado.

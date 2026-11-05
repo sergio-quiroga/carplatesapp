@@ -7,7 +7,6 @@
   {"model": "plates.state", "pk": "CO", "fields": {"name": "Colorado", "fips": "08"}},
   {"model": "plates.state", "pk": "CT", "fields": {"name": "Connecticut", "fips": "09"}},
   {"model": "plates.state", "pk": "DE", "fields": {"name": "Delaware", "fips": "10"}},
-  {"model": "plates.state", "pk": "DC", "fields": {"name": "District of Columbia", "fips": "11"}},
   {"model": "plates.state", "pk": "FL", "fields": {"name": "Florida", "fips": "12"}},
   {"model": "plates.state", "pk": "GA", "fields": {"name": "Georgia", "fips": "13"}},
   {"model": "plates.state", "pk": "HI", "fields": {"name": "Hawaii", "fips": "15"}},

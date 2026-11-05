@@ -1,25 +1,34 @@
+/**
+ * App controller: loads players (running the initial setup when there are
+ * none), keeps map + legend in sync with the server and drives the state
+ * modal where players are marked as having spotted a plate.
+ */
 (function () {
   "use strict";
 
-  const config = window.USAPLATES;
-  const PERSON_KEY = "usaplates_person";
+  const api = window.USAPLATESApi;
+  const map = window.USAPLATESMap;
+  const legend = window.USAPLATESLegend;
+  const setup = window.USAPLATESSetup;
+
   const RETRY_DELAY_MS = 2000;
 
-  const personButtons = document.querySelectorAll(".person-btn");
   const backdrop = document.getElementById("modal-backdrop");
   const closeBtn = document.getElementById("modal-close");
   const plateState = document.getElementById("modal-plate-state");
   const stateNameEl = document.getElementById("modal-state-name");
-  const checkEl = document.getElementById("check-el");
-  const checkElla = document.getElementById("check-ella");
+  const optionsBox = document.getElementById("modal-options");
   const datesBox = document.getElementById("modal-dates");
   const dateFirst = document.getElementById("date-first");
   const dateLast = document.getElementById("date-last");
   const emptyMsg = document.getElementById("modal-empty");
   const loadingMsg = document.getElementById("modal-loading");
 
-  let statusByCode = {};
-  let nameByCode = {};
+  let players = [];
+  let setupPromise = null;
+  // Latest known {status, seen_by} per state code, feeding map and legend.
+  const summaryByCode = {};
+  const nameByCode = {};
   let currentCode = null;
   let currentDetail = null;
   // Every request gets an increasing number. latestSeqByCode is the newest
@@ -38,60 +47,86 @@
     timeStyle: "short",
   });
 
-  function getPerson() {
-    return localStorage.getItem(PERSON_KEY) || "el";
-  }
+  /* ---------- Map + legend ---------- */
 
-  function setPerson(person) {
-    localStorage.setItem(PERSON_KEY, person);
-    personButtons.forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.person === person);
-    });
-  }
-
-  personButtons.forEach((btn) => {
-    btn.addEventListener("click", () => setPerson(btn.dataset.person));
-  });
-
-  function applyMapStatus(code, status, seq) {
+  function applySummary(code, summary, seq) {
     if ((appliedSeqByCode[code] || 0) > seq) return;
     appliedSeqByCode[code] = seq;
-    statusByCode[code] = status;
+    summaryByCode[code] = summary;
+  }
+
+  function repaint() {
+    const statusByCode = {};
+    Object.keys(summaryByCode).forEach((code) => {
+      statusByCode[code] = summaryByCode[code].status;
+    });
+    map.updateStatuses(statusByCode);
+    legend.render(players, Object.values(summaryByCode));
   }
 
   function fetchStates() {
     const seq = ++requestSeq;
-    return fetch(config.apiStatesUrl, { cache: "no-store" })
-      .then((r) => {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.json();
-      })
-      .then((states) => {
-        states.forEach((s) => {
-          nameByCode[s.code] = s.name;
-          if (!pendingWrites.has(s.code)) applyMapStatus(s.code, s.status, seq);
-        });
-        window.USAPLATESMap.updateStatuses(statusByCode);
+    return api.getStates().then((states) => {
+      states.forEach((s) => {
+        nameByCode[s.code] = s.name;
+        if (!pendingWrites.has(s.code)) {
+          applySummary(s.code, { status: s.status, seen_by: s.seen_by }, seq);
+        }
       });
+      repaint();
+    });
   }
 
-  function stateDetailUrl(code) {
-    return config.apiStateDetailUrl.replace("__CODE__", code);
+  /* ---------- Players ---------- */
+
+  // Resolves with the players, running the setup modal if there are none yet.
+  function ensurePlayers() {
+    if (setupPromise) return setupPromise;
+    return api.getPlayers().then((list) => {
+      if (list.length) return list;
+      setupPromise = setup.open().finally(() => {
+        setupPromise = null;
+      });
+      return setupPromise;
+    });
   }
 
-  function sightingUrl(code, person) {
-    return config.apiSightingUrl.replace("__CODE__", code).replace("__PERSON__", person);
+  function loadPlayers() {
+    return ensurePlayers().then((list) => {
+      players = list;
+    });
+  }
+
+  /* ---------- State modal ---------- */
+
+  function renderOptions(detail) {
+    const options = detail.players.map((p) => {
+      const label = document.createElement("label");
+      label.className = "option";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = p.seen;
+      checkbox.dataset.playerId = p.id;
+
+      const name = document.createElement("span");
+      name.className = "option-name";
+      name.textContent = p.name;
+
+      label.append(checkbox, legend.avatar(p), name);
+      return label;
+    });
+    optionsBox.replaceChildren(...options);
   }
 
   function setChecksEnabled(enabled) {
-    checkEl.disabled = !enabled;
-    checkElla.disabled = !enabled;
+    optionsBox.querySelectorAll("input").forEach((input) => {
+      input.disabled = !enabled;
+    });
   }
 
   function showLoading() {
     currentDetail = null;
-    checkEl.checked = false;
-    checkElla.checked = false;
     setChecksEnabled(false);
     datesBox.hidden = true;
     emptyMsg.hidden = true;
@@ -100,9 +135,7 @@
 
   function renderDetail(detail) {
     currentDetail = detail;
-    checkEl.checked = detail.him.seen;
-    checkElla.checked = detail.her.seen;
-    setChecksEnabled(true);
+    renderOptions(detail);
     loadingMsg.hidden = true;
 
     if (detail.first_seen) {
@@ -116,27 +149,30 @@
     }
   }
 
+  function summaryFromDetail(detail) {
+    return {
+      status: detail.status,
+      seen_by: detail.players.filter((p) => p.seen).map((p) => p.id),
+    };
+  }
+
   // Runs a request for a state and applies its response only if it is still
   // the latest one for that state (map) and that state is still open (modal).
-  function requestDetail(code, url, options) {
+  function requestDetail(code, doRequest) {
     const seq = ++requestSeq;
     latestSeqByCode[code] = seq;
 
-    return fetch(url, Object.assign({ cache: "no-store" }, options))
-      .then((r) => {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.json();
-      })
+    return doRequest()
       .then((detail) => {
-        applyMapStatus(code, detail.status, seq);
-        window.USAPLATESMap.updateStatuses(statusByCode);
+        applySummary(code, summaryFromDetail(detail), seq);
+        repaint();
         if (latestSeqByCode[code] === seq && currentCode === code) renderDetail(detail);
       })
       .catch(() => {
         // Resync with the server so the modal never shows unconfirmed data.
         setTimeout(() => {
           if (latestSeqByCode[code] !== seq || currentCode !== code) return;
-          requestDetail(code, stateDetailUrl(code));
+          requestDetail(code, () => api.getState(code));
         }, RETRY_DELAY_MS);
       });
   }
@@ -145,12 +181,13 @@
     currentCode = code;
     plateState.textContent = name;
     stateNameEl.textContent = name;
+    optionsBox.replaceChildren();
     showLoading();
     backdrop.hidden = false;
 
     // If a mark/unmark for this state is still in flight, read after it lands.
     (pendingWrites.get(code) || Promise.resolve()).then(() => {
-      if (currentCode === code) requestDetail(code, stateDetailUrl(code));
+      if (currentCode === code) requestDetail(code, () => api.getState(code));
     });
   }
 
@@ -161,46 +198,53 @@
 
   // Unmarking deletes the sighting and its first-seen date for good, so it
   // needs an explicit confirmation.
-  function confirmUnmark(person) {
-    const sighting = person === "el" ? currentDetail.him : currentDetail.her;
-    const who = person === "el" ? "él" : "ella";
-    const since = sighting.first_seen
-      ? " (" + dateFormatter.format(new Date(sighting.first_seen)) + ")"
+  function confirmUnmark(player) {
+    const since = player.first_seen
+      ? " (" + dateFormatter.format(new Date(player.first_seen)) + ")"
       : "";
     return window.confirm(
-      `¿Desmarcar que ${who} vio la patente de ${stateNameEl.textContent}?\n\n` +
-        `Se borrará la fecha en que ${who} la vio por primera vez${since} y no se podrá recuperar.`
+      `¿Desmarcar que ${player.name} vio la patente de ${stateNameEl.textContent}?\n\n` +
+        `Se borrará la fecha en que la vio por primera vez${since} y no se podrá recuperar.`
     );
   }
 
-  function toggleSighting(checkbox, person) {
+  function toggleSighting(checkbox) {
     const code = currentCode;
     if (!code || !currentDetail) return;
+    const playerId = Number(checkbox.dataset.playerId);
+    const player = currentDetail.players.find((p) => p.id === playerId);
+    if (!player) return;
+
     const seen = checkbox.checked;
-    if (!seen && !confirmUnmark(person)) {
+    if (!seen && !confirmUnmark(player)) {
       checkbox.checked = true;
       return;
     }
     // Block further clicks until the server confirms, so requests for the
     // same state can't be processed out of order.
     setChecksEnabled(false);
-    const write = requestDetail(code, sightingUrl(code, person), {
-      method: seen ? "PUT" : "DELETE",
-    });
+    const write = requestDetail(code, () => api.setSighting(code, playerId, seen));
     pendingWrites.set(code, write);
     write.then(() => {
       if (pendingWrites.get(code) === write) pendingWrites.delete(code);
     });
   }
 
-  checkEl.addEventListener("change", () => toggleSighting(checkEl, "el"));
-  checkElla.addEventListener("change", () => toggleSighting(checkElla, "ella"));
+  optionsBox.addEventListener("change", (event) => {
+    if (event.target.matches("input[type=checkbox]")) toggleSighting(event.target);
+  });
 
-  // Pick up changes made from the other phone when coming back to the app.
+  /* ---------- Lifecycle ---------- */
+
+  // Pick up changes made from other phones when coming back to the app.
   function refresh() {
-    fetchStates().catch(() => {});
+    if (setupPromise) return;
+    loadPlayers()
+      .then(fetchStates)
+      .catch(() => {});
     if (currentCode && currentDetail && !pendingWrites.has(currentCode)) {
-      requestDetail(currentCode, stateDetailUrl(currentCode));
+      const code = currentCode;
+      requestDetail(code, () => api.getState(code));
     }
   }
 
@@ -219,12 +263,12 @@
     if (event.key === "Escape" && !backdrop.hidden) closeModal();
   });
 
-  setPerson(getPerson());
-
   Promise.all([
-    window.USAPLATESMap.init({
+    map.init({
       onStateClick: (code) => openModal(code, nameByCode[code] || code),
     }),
-    fetchStates(),
-  ]).then(() => window.USAPLATESMap.updateStatuses(statusByCode));
+    loadPlayers(),
+  ])
+    .then(fetchStates)
+    .then(repaint);
 })();

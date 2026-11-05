@@ -9,7 +9,7 @@ FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "states.json"
 
 
 class Command(BaseCommand):
-    """Loads/updates the 50 states + DC. Safe to run every startup.
+    """Loads/updates the 50 states. Safe to run every startup.
 
     Only touches the fields present in the fixture (name, fips), so runtime
     data such as State.last_changed survives container restarts. (loaddata

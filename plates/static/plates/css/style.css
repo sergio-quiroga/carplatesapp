@@ -1,18 +1,25 @@
 :root {
-  --color-bg: #fdf5f3;
+  --color-bg: #eef2f8;
   --color-bg-card: #ffffff;
-  --color-ink: #4a3540;
-  --color-accent: #b5476b;
-  --color-accent-soft: #e8b4c8;
+  --color-bg-soft: #f3f6fb;
+  --color-ink: #1b2540;
+  --color-ink-muted: #66708a;
+  --color-accent: #3557e8;
+  --color-accent-dark: #2541b8;
+  --color-highlight: #ff7a2f;
 
-  --color-none: #d7d3d6;
+  /* Map statuses: nobody / some players / every player. */
+  --color-none: #d3d8e2;
   --color-none-stroke: #ffffff;
-  --color-him: #6fa3d8;
-  --color-her: #ef9fc0;
-  --color-both: #79c29a;
+  --color-some: #ffc93c;
+  --color-all: #2dbd6e;
 
-  --radius: 16px;
-  --shadow: 0 8px 24px rgba(74, 53, 64, 0.12);
+  --font-display: "Trebuchet MS", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --font-body: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 10px 28px rgba(27, 37, 64, 0.12);
 }
 
 * {
@@ -22,60 +29,53 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #fff8f6 0%, var(--color-bg) 60%);
+  background:
+    radial-gradient(circle at 15% -10%, #dfe7ff 0%, transparent 45%),
+    radial-gradient(circle at 90% 0%, #fff0e3 0%, transparent 40%),
+    var(--color-bg);
   color: var(--color-ink);
-  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  font-family: var(--font-body);
   padding-bottom: 2rem;
 }
 
+/* Header */
+
 .app-header {
   text-align: center;
-  padding: 1.75rem 1rem 1rem;
+  padding: 1.75rem 1rem 1.25rem;
 }
 
 .app-header h1 {
-  font-family: "Segoe Script", "Bradley Hand", "Comic Sans MS", cursive;
-  font-weight: 400;
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
-  color: var(--color-accent);
-  margin: 0 0 0.25rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.9rem, 5.5vw, 2.8rem);
+  letter-spacing: -0.01em;
+  margin: 0 0 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.heart {
-  color: var(--color-accent);
+.title-badge {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.55em;
+  letter-spacing: 0.12em;
+  padding: 0.3em 0.55em;
+  border-radius: 8px;
+  transform: rotate(-4deg);
+  box-shadow: 0 4px 0 var(--color-accent-dark);
 }
 
 .tagline {
-  margin: 0 0 1rem;
-  color: #8a7480;
-  font-size: 0.95rem;
-}
-
-.person-switch {
-  display: inline-flex;
-  gap: 0.5rem;
-  background: var(--color-bg-card);
-  padding: 0.35rem;
-  border-radius: 999px;
-  box-shadow: var(--shadow);
-}
-
-.person-btn {
-  border: none;
-  background: transparent;
-  padding: 0.5rem 1.25rem;
-  border-radius: 999px;
+  margin: 0;
+  color: var(--color-ink-muted);
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-ink);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.person-btn.active {
-  background: var(--color-accent);
-  color: #fff;
-}
+/* Layout */
 
 main {
   max-width: 1100px;
@@ -118,19 +118,24 @@ main {
 }
 
 .state-shape:hover {
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
-.state-shape.status-him { fill: var(--color-him); }
-.state-shape.status-her { fill: var(--color-her); }
-.state-shape.status-both { fill: var(--color-both); }
+/* Background-only shapes (not part of the game, e.g. Washington D.C.). */
+.state-shape-inactive {
+  cursor: inherit;
+  pointer-events: none;
+}
+
+.state-shape.status-some { fill: var(--color-some); }
+.state-shape.status-all { fill: var(--color-all); }
 
 .state-label {
   font-size: 7px;
-  fill: #3d2c35;
+  fill: #1b2540;
   pointer-events: none;
   text-anchor: middle;
-  font-weight: 600;
+  font-weight: 700;
   paint-order: stroke;
   stroke: #ffffffb0;
   stroke-width: 2px;
@@ -150,45 +155,119 @@ main {
 .map-hint {
   text-align: center;
   font-size: 0.8rem;
-  color: #a5919c;
+  color: var(--color-ink-muted);
   padding: 0.4rem 0 0.2rem;
 }
+
+/* Legend / scoreboard */
 
 .legend {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.6rem;
   justify-content: center;
-  padding: 1rem 0 0;
+  padding: 1.1rem 0 0;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
-.legend li {
+.legend-item {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  background: var(--color-bg-card);
+  border-radius: 999px;
+  padding: 0.35rem 0.45rem 0.35rem 0.6rem;
+  box-shadow: 0 3px 10px rgba(27, 37, 64, 0.08);
+  font-weight: 600;
+}
+
+.legend-count {
+  min-width: 1.7rem;
+  text-align: center;
+  background: var(--color-bg-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-all .legend-count {
+  background: var(--color-all);
+  color: #fff;
 }
 
 .swatch {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
   display: inline-block;
 }
 
 .swatch-none { background: var(--color-none); }
-.swatch-him { background: var(--color-him); }
-.swatch-her { background: var(--color-her); }
-.swatch-both { background: var(--color-both); }
+.swatch-all { background: var(--color-all); }
 
-/* Modal */
+/* Player avatar: just the face emoji, no background. */
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink);
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.legend-player {
+  padding-left: 0.35rem;
+}
+
+/* Buttons */
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease, box-shadow 0.1s ease;
+}
+
+.btn:active {
+  transform: translateY(2px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--color-accent-dark);
+}
+
+.btn-primary:active {
+  box-shadow: 0 2px 0 var(--color-accent-dark);
+}
+
+.btn-ghost {
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+}
+
+/* Modal (shared) */
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(74, 53, 64, 0.45);
+  background: rgba(27, 37, 64, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,8 +285,10 @@ main {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 1.75rem 1.5rem 1.5rem;
-  max-width: 380px;
+  max-width: 400px;
   width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   text-align: center;
   animation: pop-in 0.15s ease-out;
 }
@@ -217,35 +298,203 @@ main {
   to { transform: scale(1); opacity: 1; }
 }
 
+.modal h2 {
+  margin: 0.25rem 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+}
+
 .modal-close {
   position: absolute;
   top: 0.5rem;
   right: 0.75rem;
   border: none;
   background: transparent;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   line-height: 1;
-  color: #a5919c;
+  color: var(--color-ink-muted);
   cursor: pointer;
 }
+
+/* Setup modal */
+
+.setup-welcome {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.7rem, 6vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--color-accent);
+  text-shadow: 0 3px 0 rgba(37, 65, 184, 0.18);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.setup-step[hidden] {
+  display: none;
+}
+
+.setup-question {
+  margin: 0 0 1rem;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.stepper-btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+  font-size: 1.6rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.stepper-value {
+  min-width: 3.5rem;
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.setup-names {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.setup-name {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Tappable avatar in the setup form; opens the face picker. */
+.avatar-btn {
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 1.9rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.avatar-btn:active {
+  transform: translateY(2px);
+}
+
+.avatar-btn[aria-expanded="true"] {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr));
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: var(--color-bg-soft);
+  border-radius: var(--radius-sm);
+}
+
+.avatar-picker[hidden] {
+  display: none;
+}
+
+.avatar-choice {
+  border: 2px solid transparent;
+  background: transparent;
+  border-radius: 10px;
+  padding: 0.2rem 0;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  cursor: pointer;
+}
+
+.avatar-choice:hover {
+  background: var(--color-bg-card);
+}
+
+.avatar-choice[aria-selected="true"] {
+  background: var(--color-bg-card);
+  border-color: var(--color-accent);
+}
+
+.setup-name input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid var(--color-none);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  background: var(--color-bg-card);
+}
+
+.setup-name input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.setup-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.form-error {
+  color: #c62f3a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+/* State modal */
 
 .plate {
   margin: 0 auto 1rem;
   width: 220px;
-  border: 3px solid #2b2b2b;
+  border: 3px solid var(--color-ink);
   border-radius: 10px;
-  background: linear-gradient(180deg, #f4f7fa 0%, #dfe6ec 100%);
+  background: linear-gradient(180deg, #f6f8fb 0%, #dde4ee 100%);
   padding: 0.5rem 0.75rem 0.75rem;
-  box-shadow: inset 0 0 0 3px #fff, 0 4px 10px rgba(0,0,0,0.15);
-  color: #1d3557;
+  box-shadow: inset 0 0 0 3px #fff, 0 4px 10px rgba(0, 0, 0, 0.15);
+  color: var(--color-ink);
 }
 
 .plate-top {
   font-size: 0.65rem;
   letter-spacing: 0.3em;
   text-align: center;
-  color: var(--color-accent);
-  font-weight: 700;
+  color: var(--color-highlight);
+  font-weight: 800;
 }
 
 .plate-state {
@@ -262,21 +511,21 @@ main {
   font-family: "Courier New", monospace;
   letter-spacing: 0.2em;
   font-size: 1rem;
-  color: #333;
+  font-weight: 700;
+  color: var(--color-accent);
 }
 
-.modal h2 {
-  margin: 0.25rem 0 1rem;
-  font-family: "Segoe Script", "Bradley Hand", "Comic Sans MS", cursive;
-  color: var(--color-accent);
-  font-size: 1.6rem;
-  font-weight: 400;
+.modal-question {
+  margin: 0 0 0.6rem;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .modal-options {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
   text-align: left;
   margin-bottom: 1rem;
 }
@@ -285,17 +534,24 @@ main {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.6rem 0.8rem;
-  border-radius: 10px;
-  background: #f7eef1;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-soft);
+  border: 2px solid transparent;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .option input {
-  width: 1.1rem;
-  height: 1.1rem;
-  accent-color: var(--color-accent);
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-all);
+}
+
+.option:has(input:checked) {
+  background: #e6f7ee;
+  border-color: var(--color-all);
 }
 
 .option:has(input:disabled) {
@@ -303,15 +559,16 @@ main {
   cursor: progress;
 }
 
-.option-el { border-left: 4px solid var(--color-him); }
-.option-ella { border-left: 4px solid var(--color-her); }
+.option-name {
+  overflow-wrap: anywhere;
+}
 
 .modal-dates {
   font-size: 0.85rem;
-  color: #6b5763;
+  color: var(--color-ink-muted);
   text-align: left;
-  background: #faf5f2;
-  border-radius: 10px;
+  background: var(--color-bg-soft);
+  border-radius: var(--radius-sm);
   padding: 0.6rem 0.8rem;
   margin-top: 0.5rem;
 }
@@ -322,13 +579,13 @@ main {
 
 .modal-empty {
   font-size: 0.85rem;
-  color: #a5919c;
+  color: var(--color-ink-muted);
   margin-top: 0.5rem;
 }
 
 @media (max-width: 480px) {
   .legend {
-    font-size: 0.8rem;
-    gap: 0.6rem;
+    font-size: 0.85rem;
+    gap: 0.45rem;
   }
 }
