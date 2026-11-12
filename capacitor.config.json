@@ -1,0 +1,9 @@
+{
+  "appId": "com.usaplates.app",
+  "appName": "USA Car Plates",
+  "webDir": "dist",
+  "ios": {
+    "backgroundColor": "#eef2f8",
+    "contentInset": "never"
+  }
+}

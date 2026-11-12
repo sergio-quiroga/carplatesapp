@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#eef2f8">
+  <title>USA Car Plates</title>
+  <link rel="stylesheet" href="/src/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1><span class="title-badge">USA</span> Car Plates</h1>
+    <p class="tagline">¿Quién encuentra más patentes en el camino?</p>
+  </header>
+
+  <main>
+    <div class="map-wrap">
+      <div id="map" aria-label="Mapa de Estados Unidos"></div>
+      <div class="map-hint">Pellizca para hacer zoom · arrastra para mover</div>
+    </div>
+
+    <ul class="legend" id="legend" aria-label="Leyenda y marcador"></ul>
+
+    <div class="game-actions">
+      <button type="button" class="btn btn-quiet" id="new-game">Nueva partida</button>
+    </div>
+  </main>
+
+  <!-- Initial setup: number of players, then their names. -->
+  <div id="setup-backdrop" class="modal-backdrop" hidden>
+    <div class="modal modal-setup" role="dialog" aria-modal="true" aria-labelledby="setup-welcome setup-title">
+      <p class="setup-welcome" id="setup-welcome">¡Bienvenido a <span class="nowrap">USA Car Plates!</span></p>
+      <h2 id="setup-title">¡Nueva partida!</h2>
+
+      <form id="setup-step-count" class="setup-step" novalidate>
+        <p class="setup-question">¿Cuántos jugadores van a participar?</p>
+        <div class="stepper">
+          <button type="button" class="stepper-btn" id="setup-count-dec" aria-label="Menos jugadores">&minus;</button>
+          <output id="setup-count" class="stepper-value" aria-live="polite">2</output>
+          <button type="button" class="stepper-btn" id="setup-count-inc" aria-label="Más jugadores">+</button>
+        </div>
+        <button type="submit" class="btn btn-primary">Siguiente</button>
+      </form>
+
+      <form id="setup-step-names" class="setup-step" novalidate hidden>
+        <p class="setup-question">¿Cómo se llaman? Toca la cara para elegir otra.</p>
+        <div id="setup-names" class="setup-names"></div>
+        <div id="avatar-picker" class="avatar-picker" role="listbox" aria-label="Elige una cara" hidden></div>
+        <p class="form-error" id="setup-error" role="alert" hidden></p>
+        <div class="setup-actions">
+          <button type="button" class="btn btn-ghost" id="setup-back">Atrás</button>
+          <button type="submit" class="btn btn-primary" id="setup-submit">¡A jugar!</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- State detail: who has spotted this state's plate. -->
+  <div id="modal-backdrop" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-state-name">
+      <button type="button" class="modal-close" id="modal-close" aria-label="Cerrar">&times;</button>
+
+      <div class="plate" id="modal-plate">
+        <div class="plate-top">&#9733; USA &#9733;</div>
+        <div class="plate-state" id="modal-plate-state">STATE</div>
+        <div class="plate-number">SPOT&middot;IT</div>
+      </div>
+
+      <h2 id="modal-state-name">Estado</h2>
+
+      <p class="modal-question">¿Quién vio esta patente?</p>
+      <div class="modal-options" id="modal-options"></div>
+
+      <!-- One line per player who marked this plate, in the order they did. -->
+      <section class="modal-dates" id="modal-dates" aria-labelledby="modal-dates-title" hidden>
+        <h3 class="modal-dates-title" id="modal-dates-title">Fechas de avistamiento</h3>
+        <ul class="modal-dates-list" id="modal-dates-list"></ul>
+      </section>
+
+      <p class="modal-empty" id="modal-loading" hidden>Cargando…</p>
+      <p class="modal-empty" id="modal-empty">Nadie ha visto todavía una patente de este estado.</p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/js/app.js"></script>
+</body>
+</html>

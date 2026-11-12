@@ -1,38 +1,51 @@
-# USA Car Plates 🇺🇸🚗
+# USA Car Plates 🇺🇸🚗 — versión iPhone
 
 Juego para cualquier grupo (amigos, familia, niños en un viaje en auto):
 registrar las patentes de cada estado de EEUU que cada jugador ha visto en
 la calle. Mapa interactivo, sin login. Al abrir la app por primera vez se
 pregunta cuántos jugadores hay y sus nombres.
 
+Esta rama (`usaplates-iphone`) es la versión **app de iPhone, 100 % offline**:
+no hay servidor ni conexión a internet; la partida se guarda en el propio
+teléfono y se puede seguir jugando en distintos días. La versión servidor
+(Django + Docker) sigue en `master`.
+
 ## Stack
 
-- **Backend:** Django 5 + Django REST Framework, SQLite.
-- **Frontend:** HTML + CSS + JS vanilla, mapa renderizado con
-  [D3.js](https://d3js.org/) + [topojson-client](https://github.com/topojson/topojson-client)
-  a partir del dataset público [us-atlas](https://github.com/topojson/us-atlas)
-  (bordes de estados, dominio público, US Census).
-  Todas las librerías están vendorizadas en `plates/static/plates/vendor/`,
-  no se cargan desde ningún CDN, así el sitio funciona sin depender de
-  internet salvo para el propio tunnel de acceso.
-- **Servidor de estáticos:** whitenoise (no hace falta nginx aparte).
-- **Deploy:** Docker + docker-compose, pensado para correr en el Steam Deck
-  con un Cloudflare Tunnel.
+- **App:** HTML + CSS + JS (módulos ES), sin frameworks.
+- **Mapa:** paths SVG precalculados a partir del dataset público
+  [us-atlas](https://github.com/topojson/us-atlas) (dominio público, US
+  Census); zoom/pan con `d3-selection` + `d3-zoom`.
+- **Base de datos local:** [Capacitor Preferences](https://capacitorjs.com/docs/apis/preferences)
+  (en iPhone, `UserDefaults`: almacenamiento nativo que iOS no borra por su
+  cuenta y que entra en los respaldos de iCloud). En el navegador del
+  computador usa `localStorage`.
+- **Empaquetado iOS:** [Capacitor](https://capacitorjs.com/) 8.
+- **Herramientas:** Vite (servidor de desarrollo y build), Vitest (tests de
+  reglas), Playwright (tests end-to-end en WebKit y Chromium).
 
 ## Modelo de datos
 
-- `State`: los 50 estados (código postal, nombre, FIPS). Washington D.C. no
-  es parte del juego: el mapa lo dibuja en gris y sin clic.
-- `Player`: los jugadores (nombre único sin distinguir mayúsculas, una cara
-  emoji como `avatar` y `position` para el orden). Las caras permitidas están
-  en `plates/avatars.py`. Se crean todos juntos en la configuración
-  inicial (máximo 12).
-- `Sighting`: una fila por `(state, player)` con `first_seen` y
-  `last_modified`. No se guarda historial completo, solo el flag actual
-  (existe la fila = visto) y sus dos fechas.
+Toda la partida es un único documento JSON (clave `usaplates.game`):
 
-Las reglas del juego (estado del mapa, configuración, marcar/desmarcar,
-reinicio) viven en `plates/services.py`; vistas y serializers solo las usan.
+```json
+{
+  "version": 1,
+  "players": [{ "id": 1, "name": "Ana", "avatar": "🤠" }],
+  "sightings": { "CA": { "1": "2026-11-12T18:56:00.000Z" } }
+}
+```
+
+- `players`: en el orden en que se ingresaron (máximo 12, nombres únicos sin
+  distinguir mayúsculas, cara de `src/js/avatars.js`).
+- `sightings`: estado → id de jugador → fecha en que lo vio por primera vez.
+  Que exista la entrada significa "visto".
+- Los 50 estados están en `src/js/states.js`. Washington D.C. no es parte
+  del juego: el mapa lo dibuja en gris y sin clic.
+
+Si algún día cambia la forma del documento, se sube `version` y se
+convierte el documento antiguo en `parse()` de `src/js/game.js` (cumple el
+papel que tenían las migraciones de Django).
 
 El color de cada estado en el mapa se deriva de cuántos jugadores lo vieron:
 
@@ -43,135 +56,131 @@ El color de cada estado en el mapa se deriva de cuántos jugadores lo vieron:
 | Todos                   | `all`    | Verde    |
 
 Debajo del mapa la leyenda muestra "Sin ver", cada jugador con cuántas
-patentes ha visto, y "Todos".
+patentes ha visto, y "Todos". El botón **Nueva partida** borra jugadores y
+patentes (pide confirmación) y vuelve a la pantalla inicial.
 
-Para volver a la pantalla inicial de jugadores (borra jugadores y patentes):
+## Desarrollo y pruebas en Windows
+
+Requisitos: [Node.js](https://nodejs.org/) 20.19+ o 22.12+.
 
 ```bash
-python manage.py reset_game
+npm install
 ```
 
-## Desarrollo local (VSCode)
+### Probar en el navegador del computador
 
 ```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-source .venv/bin/activate
-
-pip install -r requirements.txt
-
-python manage.py migrate
-python manage.py seed_states     # carga/actualiza los 50 estados
-python manage.py runserver
+npm run dev
 ```
 
-Abrir http://127.0.0.1:8000/
+Abrir http://localhost:5173/ en Chrome o Edge. Se recarga solo al guardar
+cambios.
 
-Correr los tests:
+- **Ver como iPhone:** F12 → botón de dispositivo (Ctrl+Shift+M) → elegir un
+  iPhone. El pellizco se simula con Shift + arrastrar.
+- **Ver/borrar los datos:** F12 → Application → Local Storage
+  (`CapacitorStorage.usaplates.game`). "Clear site data" deja la app como
+  recién instalada.
+- **Sin internet:** F12 → Network → "Offline".
+
+### Probar en tu iPhone por Wi-Fi
+
+Con el computador y el iPhone en la misma red:
 
 ```bash
-python manage.py test
+npm run dev -- --host
 ```
 
-## Docker
+Vite muestra una dirección `Network: http://192.168.x.x:5173/`; ábrela en
+Safari en el iPhone. La primera vez Windows puede preguntar si permite el
+acceso a Node.js en la red privada: acepta. Los datos quedan guardados en
+Safari del iPhone (separados de la app instalada).
+
+### Tests
 
 ```bash
-cp .env.example .env
-# Editar .env: DJANGO_SECRET_KEY, DJANGO_ALLOWED_HOSTS, etc.
-
-docker compose up -d --build
+npm test                     # reglas del juego y almacenamiento (Vitest)
+npx playwright install webkit chromium   # solo la primera vez
+npm run test:e2e             # flujos completos en WebKit (iPhone) y Chrome
 ```
 
-El contenedor `web` corre migraciones + seed de estados automáticamente al
-iniciar (`docker/entrypoint.sh`) y sirve con gunicorn en el puerto 8000.
-La base de datos SQLite se persiste en `./data/db.sqlite3` (montado como
-volumen).
+WebKit es el motor del WebView del iPhone, así que `test:e2e` detecta
+diferencias de Safari sin tener un Mac.
 
-### Exponer con Cloudflare Tunnel
-
-El `docker-compose.yml` incluye un servicio opcional `cloudflared`:
-
-1. Crear un tunnel en el dashboard de Cloudflare Zero Trust
-   (Networks → Tunnels).
-2. Configurar el "Public Hostname" del tunnel apuntando al servicio
-   `web`, puerto `8000`.
-3. Copiar el token del tunnel en `CLOUDFLARE_TUNNEL_TOKEN` dentro de
-   `.env`.
-4. `docker compose up -d`.
-
-Si ya administras cloudflared fuera de Docker en el Steam Deck, borra el
-servicio `cloudflared` de `docker-compose.yml` y apunta tu tunnel existente
-a `http://localhost:8000`.
-
-No hay autenticación en el sitio: como solo ustedes conocen la URL del
-tunnel, no se implementó login. El selector "Él / Ella" es solo para saber
-quién marcó cada patente, no es una medida de seguridad.
-
-## Despliegue en el Steam Deck (SteamOS)
-
-1. Instalar Docker (o usar Distrobox/una distro contenedora, según cómo
-   tengas configurado SteamOS — al estar en modo Desktop, Docker normal
-   funciona igual que en cualquier Linux).
-2. Clonar el repo, copiar `.env.example` a `.env` y completarlo.
-3. `docker compose up -d --build`.
-4. El servicio queda corriendo en background; con `restart: unless-stopped`
-   vuelve a levantarse solo si el Steam Deck se reinicia.
-
-Para actualizar tras hacer cambios y subirlos a GitHub:
+### Build de producción
 
 ```bash
-git pull
-docker compose up -d --build
+npm run build      # genera dist/
+npm run preview    # sirve dist/ en http://localhost:4173/
+```
+
+## Compilar la app de iOS (requiere un Mac con Xcode)
+
+El proyecto Xcode está en `ios/` (generado por Capacitor y versionado). En
+el Mac:
+
+```bash
+npm install
+npm run ios:sync   # build web + copia a ios/ + plugins nativos
+npm run ios:open   # abre Xcode
+```
+
+En Xcode: elegir el equipo de firma (Signing & Capabilities), conectar el
+iPhone o elegir un simulador y presionar ▶. Para distribuir por TestFlight
+o la App Store se necesita una cuenta de Apple Developer.
+
+Antes de publicar:
+
+- Cambiar `appId` en `capacitor.config.json` (hoy `com.usaplates.app`) por un
+  identificador propio (por ejemplo `cl.tunombre.usaplates`) y correr
+  `npx cap sync ios`.
+- Agregar el ícono y la pantalla de inicio en
+  `ios/App/App/Assets.xcassets` (o con `@capacitor/assets`).
+
+Si no tienes Mac: GitHub Actions (runners macOS), Codemagic o un Mac en la
+nube pueden compilar y subir a TestFlight.
+
+Cada vez que cambies código web hay que volver a correr `npm run ios:sync`
+para que la app nativa lo incluya.
+
+## Regenerar el mapa
+
+`src/js/map-shapes.js` se genera desde `scripts/data/states-albers-10m.json`
+y está versionado. Solo hay que regenerarlo si cambia ese archivo:
+
+```bash
+npm run build:map
 ```
 
 ## Estructura del proyecto
 
 ```
 usaplates/
-├── config/                  # settings, urls, wsgi del proyecto Django
-├── plates/                  # app principal
-│   ├── models.py            # State, Player, Sighting
-│   ├── services.py          # reglas del juego (status, setup, marcar, reset)
-│   ├── avatars.py           # catálogo de caras emoji para los jugadores
-│   ├── serializers.py       # DRF serializers
-│   ├── views.py             # vistas de API + vista index
-│   ├── urls.py
-│   ├── fixtures/states.json # los 50 estados
-│   ├── management/commands/
-│   │   ├── seed_states.py
-│   │   └── reset_game.py    # borra jugadores y patentes
-│   ├── templates/plates/index.html
-│   └── static/plates/
-│       ├── css/style.css
-│       ├── js/api.js        # cliente de la API REST
-│       ├── js/map.js        # renderizado del mapa D3 + zoom/pan
-│       ├── js/legend.js     # leyenda / marcador bajo el mapa
-│       ├── js/setup.js      # modal inicial: cantidad, nombres y caras
-│       ├── js/app.js        # orquestación, modal de estado, sincronización
-│       ├── vendor/          # d3.min.js, topojson-client.min.js
-│       └── data/            # states-albers-10m.json (topojson)
-├── docker/entrypoint.sh
-├── Dockerfile
-├── docker-compose.yml
-├── .env.example
-└── requirements.txt
+├── index.html               # página única de la app
+├── src/
+│   ├── css/style.css
+│   └── js/
+│       ├── app.js           # orquestación, modal de estado, nueva partida
+│       ├── game.js          # reglas del juego + base de datos local
+│       ├── api.js           # instancia del juego guardada con Preferences
+│       ├── map.js           # mapa SVG + zoom/pan
+│       ├── map-shapes.js    # paths del mapa (generado)
+│       ├── legend.js        # leyenda / marcador bajo el mapa
+│       ├── setup.js         # modal inicial: cantidad, nombres y caras
+│       ├── states.js        # los 50 estados
+│       └── avatars.js       # catálogo de caras
+├── scripts/
+│   ├── build-map.mjs        # genera map-shapes.js
+│   └── data/states-albers-10m.json
+├── tests/
+│   ├── unit/                # Vitest
+│   └── e2e/                 # Playwright
+├── ios/                     # proyecto Xcode (Capacitor)
+├── capacitor.config.json
+├── vite.config.js
+├── playwright.config.js
+└── package.json
 ```
-
-## API
-
-- `GET /api/players/` — lista de jugadores en orden (`[]` si aún no se configuran).
-- `POST /api/players/` — configuración inicial:
-  `{"players": [{"name": "Ana", "avatar": "🤠"}, {"name": "Beto", "avatar": "🤓"}]}`.
-  Responde `409` si ya hay jugadores.
-- `GET /api/states/` — lista de estados con su `status` (`none|some|all`)
-  y `seen_by` (ids de los jugadores que lo vieron).
-- `GET /api/states/<code>/` — detalle de un estado: `players` (cada uno con
-  `seen` y sus fechas) y `first_seen`/`last_modified` combinados.
-- `PUT /api/states/<code>/sightings/<player_id>/` — marca una patente como
-  vista por ese jugador (idempotente).
-- `DELETE /api/states/<code>/sightings/<player_id>/` — elimina la marca.
 
 ## Nota sobre la imagen de la patente en el modal
 

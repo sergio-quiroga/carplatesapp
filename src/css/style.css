@@ -1,0 +1,663 @@
+:root {
+  --color-bg: #eef2f8;
+  --color-bg-card: #ffffff;
+  --color-bg-soft: #f3f6fb;
+  --color-ink: #1b2540;
+  --color-ink-muted: #66708a;
+  --color-accent: #3557e8;
+  --color-accent-dark: #2541b8;
+  --color-highlight: #ff7a2f;
+
+  /* Map statuses: nobody / some players / every player. */
+  --color-none: #d3d8e2;
+  --color-none-stroke: #ffffff;
+  --color-some: #ffc93c;
+  --color-all: #2dbd6e;
+
+  --font-display: "Trebuchet MS", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --font-body: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 10px 28px rgba(27, 37, 64, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 15% -10%, #dfe7ff 0%, transparent 45%),
+    radial-gradient(circle at 90% 0%, #fff0e3 0%, transparent 40%),
+    var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  /* Keep clear of the iPhone notch / home indicator (all 0 elsewhere). */
+  padding:
+    env(safe-area-inset-top, 0px)
+    env(safe-area-inset-right, 0px)
+    calc(2rem + env(safe-area-inset-bottom, 0px))
+    env(safe-area-inset-left, 0px);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Header */
+
+.app-header {
+  text-align: center;
+  padding: 1.75rem 1rem 1.25rem;
+}
+
+.app-header h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.9rem, 5.5vw, 2.8rem);
+  letter-spacing: -0.01em;
+  margin: 0 0 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.title-badge {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.55em;
+  letter-spacing: 0.12em;
+  padding: 0.3em 0.55em;
+  border-radius: 8px;
+  transform: rotate(-4deg);
+  box-shadow: 0 4px 0 var(--color-accent-dark);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Layout */
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.map-wrap {
+  background: var(--color-bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.5rem;
+  overflow: hidden;
+  touch-action: none;
+  /* A long press on the map shouldn't select labels or open iOS callouts. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#map {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 320px;
+}
+
+#map svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+
+#map svg:active {
+  cursor: grabbing;
+}
+
+.state-shape {
+  fill: var(--color-none);
+  stroke: var(--color-none-stroke);
+  stroke-width: 1px;
+  transition: fill 0.2s ease, opacity 0.15s ease;
+  cursor: pointer;
+}
+
+/* Only real pointers: on touch screens :hover sticks after a tap. */
+@media (hover: hover) {
+  .state-shape:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Background-only shapes (not part of the game, e.g. Washington D.C.). */
+.state-shape-inactive {
+  cursor: inherit;
+  pointer-events: none;
+}
+
+.state-shape.status-some { fill: var(--color-some); }
+.state-shape.status-all { fill: var(--color-all); }
+
+.state-label {
+  font-size: 7px;
+  fill: #1b2540;
+  pointer-events: none;
+  text-anchor: middle;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #ffffffb0;
+  stroke-width: 2px;
+}
+
+/* Small northeastern states overlap at the default zoom; reveal their
+   labels only once the map is zoomed in (see map.js zoom threshold). */
+.state-label-crowded {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.labels.zoomed-in .state-label-crowded {
+  opacity: 1;
+}
+
+.map-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-ink-muted);
+  padding: 0.4rem 0 0.2rem;
+}
+
+/* Legend / scoreboard */
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  padding: 1.1rem 0 0;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--color-bg-card);
+  border-radius: 999px;
+  padding: 0.35rem 0.45rem 0.35rem 0.6rem;
+  box-shadow: 0 3px 10px rgba(27, 37, 64, 0.08);
+  font-weight: 600;
+}
+
+.legend-count {
+  min-width: 1.7rem;
+  text-align: center;
+  background: var(--color-bg-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-all .legend-count {
+  background: var(--color-all);
+  color: #fff;
+}
+
+.swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.swatch-none { background: var(--color-none); }
+.swatch-all { background: var(--color-all); }
+
+/* Player avatar: just the face emoji, no background. */
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink);
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.legend-player {
+  padding-left: 0.35rem;
+}
+
+/* Buttons */
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease, box-shadow 0.1s ease;
+}
+
+.btn:active {
+  transform: translateY(2px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--color-accent-dark);
+}
+
+.btn-primary:active {
+  box-shadow: 0 2px 0 var(--color-accent-dark);
+}
+
+.btn-ghost {
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+}
+
+/* Low-key action on the page background, styled like the legend chips. */
+.btn-quiet {
+  background: var(--color-bg-card);
+  color: var(--color-ink-muted);
+  font-size: 0.85rem;
+  padding: 0.5rem 1.1rem;
+  box-shadow: 0 3px 10px rgba(27, 37, 64, 0.08);
+}
+
+.game-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.5rem;
+}
+
+/* Modal (shared) */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 37, 64, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    calc(1rem + env(safe-area-inset-top, 0px))
+    calc(1rem + env(safe-area-inset-right, 0px))
+    calc(1rem + env(safe-area-inset-bottom, 0px))
+    calc(1rem + env(safe-area-inset-left, 0px));
+  z-index: 50;
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal {
+  position: relative;
+  background: var(--color-bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.75rem 1.5rem 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  /* Safari's 100vh includes the area under its toolbars. */
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  text-align: center;
+  animation: pop-in 0.15s ease-out;
+}
+
+@keyframes pop-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal h2 {
+  margin: 0.25rem 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  border: none;
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+/* Setup modal */
+
+.setup-welcome {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.7rem, 6vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--color-accent);
+  text-shadow: 0 3px 0 rgba(37, 65, 184, 0.18);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.setup-step[hidden] {
+  display: none;
+}
+
+.setup-question {
+  margin: 0 0 1rem;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.stepper-btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+  font-size: 1.6rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.stepper-value {
+  min-width: 3.5rem;
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.setup-names {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.setup-name {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Tappable avatar in the setup form; opens the face picker. */
+.avatar-btn {
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 1.9rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.avatar-btn:active {
+  transform: translateY(2px);
+}
+
+.avatar-btn[aria-expanded="true"] {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr));
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: var(--color-bg-soft);
+  border-radius: var(--radius-sm);
+}
+
+.avatar-picker[hidden] {
+  display: none;
+}
+
+.avatar-choice {
+  border: 2px solid transparent;
+  background: transparent;
+  border-radius: 10px;
+  padding: 0.2rem 0;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .avatar-choice:hover {
+    background: var(--color-bg-card);
+  }
+}
+
+.avatar-choice[aria-selected="true"] {
+  background: var(--color-bg-card);
+  border-color: var(--color-accent);
+}
+
+.setup-name input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid var(--color-none);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  background: var(--color-bg-card);
+}
+
+.setup-name input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.setup-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.form-error {
+  color: #c62f3a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+/* State modal */
+
+.plate {
+  margin: 0 auto 1rem;
+  width: 220px;
+  border: 3px solid var(--color-ink);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f6f8fb 0%, #dde4ee 100%);
+  padding: 0.5rem 0.75rem 0.75rem;
+  box-shadow: inset 0 0 0 3px #fff, 0 4px 10px rgba(0, 0, 0, 0.15);
+  color: var(--color-ink);
+}
+
+.plate-top {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  color: var(--color-highlight);
+  font-weight: 800;
+}
+
+.plate-state {
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.03em;
+  font-family: Georgia, "Times New Roman", serif;
+  margin: 0.1rem 0;
+}
+
+.plate-number {
+  text-align: center;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.2em;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.modal-question {
+  margin: 0 0 0.6rem;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.modal-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-soft);
+  border: 2px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.option input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-all);
+}
+
+.option:has(input:checked) {
+  background: #e6f7ee;
+  border-color: var(--color-all);
+}
+
+.option:has(input:disabled) {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.option-name {
+  overflow-wrap: anywhere;
+}
+
+.modal-dates {
+  font-size: 0.85rem;
+  color: var(--color-ink-muted);
+  text-align: left;
+  background: var(--color-bg-soft);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.8rem;
+  margin: 0.5rem 0 0;
+}
+
+.modal-dates-title {
+  margin: 0.1rem 0 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-muted);
+}
+
+.modal-dates-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.modal-date {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0;
+}
+
+.modal-date .avatar {
+  font-size: 1rem;
+}
+
+.modal-date-name {
+  font-weight: 700;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.modal-date-when {
+  margin-left: auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-empty {
+  font-size: 0.85rem;
+  color: var(--color-ink-muted);
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .legend {
+    font-size: 0.85rem;
+    gap: 0.45rem;
+  }
+}

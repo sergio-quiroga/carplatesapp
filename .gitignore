@@ -1,20 +1,19 @@
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
+# Node / Vite
+node_modules/
+dist/
 
-# Django
-/data/
-staticfiles/
-*.sqlite3
-*.log
-
-# Env / secrets
-.env
+# Tests
+test-results/
+playwright-report/
 
 # Editors / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Leftovers from the Django version
+.venv/
+data/
+.env
+__pycache__/
