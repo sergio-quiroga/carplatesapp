@@ -1,7 +1,7 @@
 /**
- * Initial game setup modal: asks how many players there are, then their
- * names and face avatars, and saves them. It cannot be dismissed, since the
- * game is unusable without players.
+ * New game setup modal: asks how many players there are, then their names
+ * and face avatars, and starts the game. "Atrás" on the first step cancels
+ * it, leaving any game in progress untouched.
  */
 import { api } from "./api.js";
 import { AVATARS } from "./avatars.js";
@@ -27,6 +27,7 @@ const namesBox = document.getElementById("setup-names");
 const picker = document.getElementById("avatar-picker");
 const errorEl = document.getElementById("setup-error");
 const backBtn = document.getElementById("setup-back");
+const cancelBtn = document.getElementById("setup-cancel");
 const submitBtn = document.getElementById("setup-submit");
 
 let count = DEFAULT_PLAYERS;
@@ -159,6 +160,7 @@ function errorMessage(err) {
 }
 
 function finish(players) {
+  closePicker();
   backdrop.hidden = true;
   resolveSetup(players);
 }
@@ -174,7 +176,7 @@ function submit() {
   closePicker();
   submitBtn.disabled = true;
   api
-    .setupPlayers(players)
+    .newGame(players)
     .then(finish)
     .catch((err) => showError(errorMessage(err)))
     .finally(() => {
@@ -189,6 +191,7 @@ countStep.addEventListener("submit", (event) => {
   showNamesStep();
 });
 backBtn.addEventListener("click", showCountStep);
+cancelBtn.addEventListener("click", () => finish(null));
 namesStep.addEventListener("submit", (event) => {
   event.preventDefault();
   submit();
@@ -200,7 +203,7 @@ picker.addEventListener("click", (event) => {
 
 renderPicker();
 
-/** Shows the setup modal and resolves with the created players. */
+/** Shows the setup modal; resolves with the new players, or null if cancelled. */
 export function open() {
   setCount(count);
   countStep.hidden = false;

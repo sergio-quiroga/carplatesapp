@@ -9,6 +9,29 @@
   <link rel="stylesheet" href="/src/css/style.css">
 </head>
 <body>
+  <!-- Home screen: shown every time the app opens, and from the "Menú" button. -->
+  <div id="home" class="home">
+    <div class="home-inner">
+      <img class="home-logo" src="/src/assets/logo.svg" alt="USA CarPlates">
+
+      <nav class="home-menu" id="home-menu" aria-label="Menú principal">
+        <button type="button" class="btn home-btn" data-action="continue" hidden>Continuar</button>
+        <button type="button" class="btn home-btn" data-action="new">Juego nuevo</button>
+        <button type="button" class="btn home-btn" data-action="options">Opciones</button>
+        <button type="button" class="btn home-btn" data-action="exit">Salir</button>
+        <p class="home-hint" id="home-exit-hint" role="status" hidden>
+          Para salir, vuelve a la pantalla de inicio del iPhone: tu partida queda guardada.
+        </p>
+      </nav>
+
+      <section class="home-panel" id="home-options" aria-labelledby="home-options-title" hidden>
+        <h2 id="home-options-title">Opciones</h2>
+        <p class="home-panel-text">Pronto habrá opciones aquí.</p>
+        <button type="button" class="btn btn-ghost" data-action="back">Volver</button>
+      </section>
+    </div>
+  </div>
+
   <header class="app-header">
     <h1><span class="title-badge">USA</span> Car Plates</h1>
     <p class="tagline">¿Quién encuentra más patentes en el camino?</p>
@@ -23,7 +46,7 @@
     <ul class="legend" id="legend" aria-label="Leyenda y marcador"></ul>
 
     <div class="game-actions">
-      <button type="button" class="btn btn-quiet" id="new-game">Nueva partida</button>
+      <button type="button" class="btn btn-quiet" id="open-menu">Menú</button>
     </div>
   </main>
 
@@ -40,7 +63,10 @@
           <output id="setup-count" class="stepper-value" aria-live="polite">2</output>
           <button type="button" class="stepper-btn" id="setup-count-inc" aria-label="Más jugadores">+</button>
         </div>
-        <button type="submit" class="btn btn-primary">Siguiente</button>
+        <div class="setup-actions">
+          <button type="button" class="btn btn-ghost" id="setup-cancel">Atrás</button>
+          <button type="submit" class="btn btn-primary">Siguiente</button>
+        </div>
       </form>
 
       <form id="setup-step-names" class="setup-step" novalidate hidden>

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1200" preserveAspectRatio="xMidYMax slice">
+  <!-- Proposal background: an open road through the desert at sunset. Replace this file to change it. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fa6ff"/>
+      <stop offset="0.45" stop-color="#c9d8ff"/>
+      <stop offset="0.75" stop-color="#ffe2c4"/>
+      <stop offset="1" stop-color="#ffc48f"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2b36b"/>
+      <stop offset="1" stop-color="#e08f4a"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b6478"/>
+      <stop offset="1" stop-color="#2f3647"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff6d8"/>
+      <stop offset="0.6" stop-color="#ffd27a"/>
+      <stop offset="1" stop-color="#ffd27a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1000" height="1200" fill="url(#sky)"/>
+
+  <!-- Sun -->
+  <circle cx="700" cy="640" r="190" fill="url(#sun)"/>
+  <circle cx="700" cy="640" r="80" fill="#fff1c7"/>
+
+  <!-- Clouds -->
+  <g fill="#ffffff" opacity="0.85">
+    <ellipse cx="200" cy="220" rx="110" ry="34"/>
+    <ellipse cx="265" cy="200" rx="70" ry="38"/>
+    <ellipse cx="780" cy="330" rx="120" ry="30"/>
+    <ellipse cx="840" cy="312" rx="66" ry="32"/>
+    <ellipse cx="480" cy="420" rx="80" ry="20"/>
+  </g>
+
+  <!-- Distant mesas -->
+  <path d="M0 720 L60 720 L80 640 L210 640 L235 720 L380 720 L395 690 L470 690 L490 720
+           L620 720 L645 610 L760 610 L790 720 L1000 720 L1000 760 L0 760 Z" fill="#c7745a" opacity="0.75"/>
+  <path d="M0 745 L120 745 L140 700 L250 700 L268 745 L820 745 L840 680 L930 680 L950 745 L1000 745 L1000 780 L0 780 Z"
+        fill="#b05f48" opacity="0.85"/>
+
+  <!-- Desert ground -->
+  <rect y="760" width="1000" height="440" fill="url(#ground)"/>
+
+  <!-- Road in perspective -->
+  <path d="M470 760 L530 760 L900 1200 L100 1200 Z" fill="url(#road)"/>
+  <path d="M470 760 L478 760 L140 1200 L118 1200 Z" fill="#f6f8fb" opacity="0.8"/>
+  <path d="M522 760 L530 760 L882 1200 L860 1200 Z" fill="#f6f8fb" opacity="0.8"/>
+  <g fill="#ffc93c">
+    <path d="M498 775 L502 775 L504 800 L496 800 Z"/>
+    <path d="M496 830 L504 830 L507 870 L493 870 Z"/>
+    <path d="M492 920 L508 920 L513 985 L487 985 Z"/>
+    <path d="M486 1050 L514 1050 L522 1150 L478 1150 Z"/>
+  </g>
+
+  <!-- Cacti -->
+  <g fill="#3c8f5a">
+    <path d="M150 900 h18 v-90 a9 9 0 0 1 18 0 v90 h-18 z"/>
+    <path d="M150 880 h-22 v-34 a8 8 0 0 1 16 0 v20 h6 z"/>
+    <path d="M186 860 h20 v-30 a8 8 0 0 1 16 0 v44 h-36 z"/>
+    <path d="M840 860 h12 v-60 a6 6 0 0 1 12 0 v60 h-12 z"/>
+    <path d="M840 846 h-14 v-22 a6 6 0 0 1 12 0 v14 h2 z"/>
+    <path d="M864 832 h12 v-18 a6 6 0 0 1 12 0 v28 h-24 z"/>
+  </g>
+
+  <!-- Road sign -->
+  <g transform="translate(700 800)">
+    <rect x="-4" y="0" width="8" height="110" fill="#5b6478"/>
+    <path d="M-38 -60 L38 -60 L38 -10 Q38 10 0 22 Q-38 10 -38 -10 Z" fill="#ffffff" stroke="#1b2540" stroke-width="5"/>
+    <text x="0" y="-20" text-anchor="middle" font-family="Trebuchet MS, sans-serif" font-size="30" font-weight="800" fill="#1b2540">66</text>
+  </g>
+</svg>

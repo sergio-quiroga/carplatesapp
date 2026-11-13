@@ -661,3 +661,118 @@ main {
     gap: 0.45rem;
   }
 }
+
+/* Home screen */
+
+.home {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  background: url("../assets/home-bg.svg") center bottom / cover no-repeat, #c9d8ff;
+  padding:
+    calc(1.5rem + env(safe-area-inset-top, 0px))
+    calc(1.5rem + env(safe-area-inset-right, 0px))
+    calc(1.5rem + env(safe-area-inset-bottom, 0px))
+    calc(1.5rem + env(safe-area-inset-left, 0px));
+  animation: fade-in 0.2s ease-out;
+}
+
+.home[hidden] {
+  display: none;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.home-inner {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  /* Sit a bit above center, leaving the road visible below. */
+  margin-bottom: 18vh;
+}
+
+.home-logo {
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.home-menu,
+.home-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.home-menu[hidden],
+.home-panel[hidden],
+.home-btn[hidden] {
+  display: none;
+}
+
+.home-btn {
+  width: 100%;
+  font-size: 1.15rem;
+  padding: 0.85rem 1.5rem;
+  background: var(--color-bg-card);
+  color: var(--color-ink);
+  box-shadow: 0 4px 0 var(--color-none);
+}
+
+.home-btn:active {
+  box-shadow: 0 2px 0 var(--color-none);
+}
+
+/* The main action (Continuar, or Juego nuevo when there's no game). */
+.home-btn.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--color-accent-dark);
+}
+
+.home-btn.btn-primary:active {
+  box-shadow: 0 2px 0 var(--color-accent-dark);
+}
+
+.home-hint {
+  margin: 0.25rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+}
+
+.home-panel {
+  text-align: center;
+}
+
+.home-panel h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+}
+
+.home-panel-text {
+  margin: 0 0 0.5rem;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+}

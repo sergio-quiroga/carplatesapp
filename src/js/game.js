@@ -28,8 +28,6 @@ export const STORAGE_KEY = "usaplates.game";
 const SCHEMA_VERSION = 1;
 
 export class ValidationError extends Error {}
-/** Players can only be set up once; a second setup would orphan sightings. */
-export class GameAlreadyConfigured extends Error {}
 export class NotFound extends Error {}
 
 export function computeStatus(seenCount, playerCount) {
@@ -127,20 +125,21 @@ export function createGame(storage, { now = () => new Date() } = {}) {
   }
 
   return {
-    /** Players in setup order (`[]` until the game is set up). */
+    /** Players in setup order (`[]` until a game is started). */
     getPlayers: () => enqueue(() => doc.players.map(playerSummary)),
 
     /**
-     * Initial setup: creates the whole group at once.
+     * Starts a new game with this group, replacing any game in progress
+     * (players and plates) in a single save.
      * @param {Array<{name:string,avatar:string}>} players
      */
-    setupPlayers: (players) =>
+    newGame: (players) =>
       enqueue(async () => {
         const entries = players.map((p) => ({ name: String(p.name).trim(), avatar: p.avatar }));
         const problem = validatePlayers(entries);
         if (problem) throw new ValidationError(problem);
-        if (doc.players.length) throw new GameAlreadyConfigured();
         await commit((next) => {
+          Object.assign(next, emptyDocument());
           next.players = entries.map((p, i) => ({ id: i + 1, ...p }));
         });
         return doc.players.map(playerSummary);
@@ -183,8 +182,5 @@ export function createGame(storage, { now = () => new Date() } = {}) {
         }
         return stateDetail(state);
       }),
-
-    /** Deletes every player and sighting so the group can be set up again. */
-    resetGame: () => enqueue(() => commit((next) => Object.assign(next, emptyDocument()))),
   };
 }

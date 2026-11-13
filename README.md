@@ -2,8 +2,14 @@
 
 Juego para cualquier grupo (amigos, familia, niños en un viaje en auto):
 registrar las patentes de cada estado de EEUU que cada jugador ha visto en
-la calle. Mapa interactivo, sin login. Al abrir la app por primera vez se
-pregunta cuántos jugadores hay y sus nombres.
+la calle. Mapa interactivo, sin login.
+
+Cada vez que se abre, la app muestra una **pantalla de inicio** con el logo
+y un menú: **Continuar** (solo si hay una partida en curso), **Juego nuevo**,
+**Opciones** (por ahora vacío) y **Salir**. "Juego nuevo" pregunta cuántos
+jugadores hay y sus nombres; si había una partida, pide confirmación y solo
+la reemplaza cuando se confirman los jugadores ("Atrás" la conserva). iOS no
+permite que una app se cierre sola, así que "Salir" explica cómo salir.
 
 Esta rama (`usaplates-iphone`) es la versión **app de iPhone, 100 % offline**:
 no hay servidor ni conexión a internet; la partida se guarda en el propio
@@ -56,8 +62,13 @@ El color de cada estado en el mapa se deriva de cuántos jugadores lo vieron:
 | Todos                   | `all`    | Verde    |
 
 Debajo del mapa la leyenda muestra "Sin ver", cada jugador con cuántas
-patentes ha visto, y "Todos". El botón **Nueva partida** borra jugadores y
-patentes (pide confirmación) y vuelve a la pantalla inicial.
+patentes ha visto, y "Todos". El botón **Menú** vuelve a la pantalla de
+inicio.
+
+El logo (`src/assets/logo.svg`) y la imagen de fondo
+(`src/assets/home-bg.svg`) son una propuesta: para cambiarlos basta con
+reemplazar esos archivos (pueden ser PNG/JPG ajustando la ruta en
+`index.html` y `style.css`).
 
 ## Desarrollo y pruebas en Windows
 
@@ -106,6 +117,11 @@ npm run test:e2e             # flujos completos en WebKit (iPhone) y Chrome
 
 WebKit es el motor del WebView del iPhone, así que `test:e2e` detecta
 diferencias de Safari sin tener un Mac.
+
+Si `npm test` dice `Cannot read properties of undefined (reading 'config')`,
+la terminal abrió la carpeta como `c:\...` en minúscula (pasa en VS Code) y
+Vitest se confunde. Entra con la letra en mayúscula y repite:
+`cd C:\Users\squir\vscode\usaplates`.
 
 ### Build de producción
 
@@ -158,15 +174,17 @@ npm run build:map
 usaplates/
 ├── index.html               # página única de la app
 ├── src/
+│   ├── assets/              # logo.svg y home-bg.svg (propuesta)
 │   ├── css/style.css
 │   └── js/
-│       ├── app.js           # orquestación, modal de estado, nueva partida
+│       ├── app.js           # orquestación, modal de estado, juego nuevo
+│       ├── home.js          # pantalla de inicio y menú principal
 │       ├── game.js          # reglas del juego + base de datos local
 │       ├── api.js           # instancia del juego guardada con Preferences
 │       ├── map.js           # mapa SVG + zoom/pan
 │       ├── map-shapes.js    # paths del mapa (generado)
 │       ├── legend.js        # leyenda / marcador bajo el mapa
-│       ├── setup.js         # modal inicial: cantidad, nombres y caras
+│       ├── setup.js         # modal de juego nuevo: cantidad, nombres y caras
 │       ├── states.js        # los 50 estados
 │       └── avatars.js       # catálogo de caras
 ├── scripts/

@@ -1,9 +1,10 @@
 /**
- * App controller: loads players (running the initial setup when there are
- * none), keeps map + legend in sync with the saved game and drives the state
+ * App controller: starts on the home menu, runs the new game setup when
+ * asked, keeps map + legend in sync with the saved game and drives the state
  * modal where players are marked as having spotted a plate.
  */
 import { api } from "./api.js";
+import * as home from "./home.js";
 import * as legend from "./legend.js";
 import * as map from "./map.js";
 import * as setup from "./setup.js";
@@ -18,7 +19,7 @@ const datesBox = document.getElementById("modal-dates");
 const datesList = document.getElementById("modal-dates-list");
 const emptyMsg = document.getElementById("modal-empty");
 const loadingMsg = document.getElementById("modal-loading");
-const newGameBtn = document.getElementById("new-game");
+const menuBtn = document.getElementById("open-menu");
 
 let players = [];
 // Latest {code, status, seen_by} of every state, feeding map and legend.
@@ -46,19 +47,6 @@ function fetchStates() {
   return api.getStates().then((list) => {
     states = list;
     repaint();
-  });
-}
-
-/* ---------- Players ---------- */
-
-// Resolves with the players, running the setup modal if there are none yet.
-function ensurePlayers() {
-  return api.getPlayers().then((list) => (list.length ? list : setup.open()));
-}
-
-function loadPlayers() {
-  return ensurePlayers().then((list) => {
-    players = list;
   });
 }
 
@@ -191,17 +179,31 @@ optionsBox.addEventListener("change", (event) => {
   if (event.target.matches("input[type=checkbox]")) toggleSighting(event.target);
 });
 
-/* ---------- New game ---------- */
+/* ---------- Home menu + new game ---------- */
 
-// Wipes players and plates for good, so it needs an explicit confirmation.
-// Reloading then starts exactly like a first launch (fresh setup form).
-function startNewGame() {
-  const ok = window.confirm(
-    "¿Empezar una nueva partida?\n\n" +
-      "Se borrarán todos los jugadores y las patentes marcadas, y no se podrán recuperar."
+// A new game replaces the one in progress for good, so that needs an
+// explicit confirmation. Nothing is erased until the new players are saved.
+function confirmNewGame() {
+  return window.confirm(
+    "¿Empezar un juego nuevo?\n\n" +
+      "Se borrarán los jugadores y las patentes marcadas de la partida actual, y no se podrán recuperar."
   );
-  if (!ok) return;
-  api.resetGame().then(() => window.location.reload());
+}
+
+function newGame() {
+  if (players.length && !confirmNewGame()) return showHome();
+  return setup.open().then((list) => {
+    if (!list) return showHome();
+    players = list;
+    return fetchStates();
+  });
+}
+
+function showHome() {
+  closeModal();
+  return home.open({ hasGame: players.length > 0 }).then((choice) => {
+    if (choice === "new") return newGame();
+  });
 }
 
 /* ---------- Lifecycle ---------- */
@@ -213,9 +215,15 @@ backdrop.addEventListener("click", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !backdrop.hidden) closeModal();
 });
-newGameBtn.addEventListener("click", startNewGame);
+menuBtn.addEventListener("click", showHome);
 
 map.init({
   onStateClick: (code) => openModal(code, STATE_BY_CODE.get(code).name),
 });
-loadPlayers().then(fetchStates);
+api
+  .getPlayers()
+  .then((list) => {
+    players = list;
+    return fetchStates();
+  })
+  .then(showHome);
