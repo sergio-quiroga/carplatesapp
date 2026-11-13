@@ -776,3 +776,70 @@ main {
   color: var(--color-ink-muted);
   font-weight: 600;
 }
+
+/* Unlocked state fact */
+
+.fact-unlock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 auto 1rem;
+  padding: 0.45rem 0.9rem;
+  border: 2px solid var(--color-all);
+  border-radius: 999px;
+  background: #e6f7ee;
+  color: #1d7a47;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  animation: unlock-pop 0.35s ease-out;
+}
+
+.fact-unlock[hidden] {
+  display: none;
+}
+
+.fact-unlock:active {
+  transform: translateY(1px);
+}
+
+.fact-unlock-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+@keyframes unlock-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  70% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Above the state modal it opens from. */
+.fact-backdrop {
+  z-index: 60;
+}
+
+.fact-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-all);
+}
+
+.fact-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-soft);
+}
+
+.fact-text {
+  margin: 1rem 0 0;
+  text-align: left;
+  line-height: 1.5;
+}

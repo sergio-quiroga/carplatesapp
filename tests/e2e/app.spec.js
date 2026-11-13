@@ -124,6 +124,38 @@ test("marking plates colors the map, and reopening the app offers Continuar", as
   await expect(page.locator("path[data-code=CA]")).toHaveClass(/status-all/);
 });
 
+test("completing a state unlocks its fact", async ({ page }) => {
+  await startGame(page, ["Ana", "Beto"]);
+  await openState(page, "OR");
+  const unlock = page.locator("#fact-unlock");
+  await expect(unlock).toBeHidden();
+
+  await option(page, "Ana").check();
+  await expect(option(page, "Ana")).toBeEnabled();
+  await expect(unlock).toBeHidden();
+
+  await option(page, "Beto").check();
+  await expect(unlock).toBeVisible();
+  await unlock.click();
+  await expect(page.locator("#fact-backdrop")).toBeVisible();
+  await expect(page.locator("#fact-state-name")).toHaveText("Oregon");
+  await expect(page.locator("#fact-text")).toHaveText("Aquí irá un dato interesante de Oregon.");
+  await expect(page.locator("#fact-image")).toHaveJSProperty("complete", true);
+
+  // Closing the fact goes back to the state.
+  await page.click("#fact-close");
+  await expect(page.locator("#fact-backdrop")).toBeHidden();
+  await expect(page.locator("#modal-backdrop")).toBeVisible();
+
+  // Unmarking someone locks it again; another state shows no button.
+  page.once("dialog", (dialog) => dialog.accept());
+  await option(page, "Beto").click();
+  await expect(unlock).toBeHidden();
+  await page.click("#modal-close");
+  await openState(page, "TX");
+  await expect(unlock).toBeHidden();
+});
+
 test("unmarking asks for confirmation", async ({ page }) => {
   await startGame(page, ["Ana"]);
   await openState(page, "TX");

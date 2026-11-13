@@ -4,6 +4,7 @@
  * modal where players are marked as having spotted a plate.
  */
 import { api } from "./api.js";
+import * as facts from "./facts.js";
 import * as home from "./home.js";
 import * as legend from "./legend.js";
 import * as map from "./map.js";
@@ -19,6 +20,7 @@ const datesBox = document.getElementById("modal-dates");
 const datesList = document.getElementById("modal-dates-list");
 const emptyMsg = document.getElementById("modal-empty");
 const loadingMsg = document.getElementById("modal-loading");
+const factBtn = document.getElementById("fact-unlock");
 const menuBtn = document.getElementById("open-menu");
 
 let players = [];
@@ -116,6 +118,8 @@ function renderDetail(detail) {
   currentDetail = detail;
   renderOptions(detail);
   loadingMsg.hidden = true;
+  // Everyone has seen this plate: its fact is unlocked.
+  factBtn.hidden = detail.status !== "all";
   renderDates(detail);
 }
 
@@ -136,12 +140,14 @@ function openModal(code, name) {
   plateState.textContent = name;
   stateNameEl.textContent = name;
   optionsBox.replaceChildren();
+  factBtn.hidden = true;
   showLoading();
   backdrop.hidden = false;
   showDetail(code, () => api.getState(code));
 }
 
 function closeModal() {
+  facts.close();
   backdrop.hidden = true;
   currentCode = null;
 }
@@ -213,7 +219,13 @@ backdrop.addEventListener("click", (event) => {
   if (event.target === backdrop) closeModal();
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !backdrop.hidden) closeModal();
+  if (event.key !== "Escape") return;
+  // The fact modal sits on top of the state modal: close that one first.
+  if (facts.isOpen()) facts.close();
+  else if (!backdrop.hidden) closeModal();
+});
+factBtn.addEventListener("click", () => {
+  if (currentCode) facts.open(currentCode);
 });
 menuBtn.addEventListener("click", showHome);
 

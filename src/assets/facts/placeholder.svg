@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <!-- Generic picture for the unlocked state facts, until each state has its own. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9bb8ff"/>
+      <stop offset="1" stop-color="#ffe2c4"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#sky)"/>
+  <circle cx="470" cy="120" r="46" fill="#fff1c7"/>
+  <path d="M0 250 L90 170 L170 230 L270 130 L380 240 L460 190 L640 270 L640 360 L0 360 Z" fill="#7aa9c9"/>
+  <path d="M0 290 L120 230 L240 285 L360 220 L500 290 L640 250 L640 360 L0 360 Z" fill="#3c8f5a"/>
+  <path d="M300 360 L330 280 L345 280 L380 360 Z" fill="#5b6478"/>
+  <g transform="translate(160 70)" fill="#ffffff" opacity="0.85">
+    <ellipse cx="0" cy="0" rx="60" ry="18"/>
+    <ellipse cx="34" cy="-12" rx="36" ry="20"/>
+  </g>
+</svg>

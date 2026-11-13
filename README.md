@@ -65,6 +65,12 @@ Debajo del mapa la leyenda muestra "Sin ver", cada jugador con cuántas
 patentes ha visto, y "Todos". El botón **Menú** vuelve a la pantalla de
 inicio.
 
+Cuando **todos** los jugadores vieron la patente de un estado (queda verde),
+en su modal aparece el botón **¡Dato desbloqueado!**, que abre un dato
+interesante del estado con una imagen. Los datos se definen en
+`src/js/facts.js` (texto + imagen en `src/assets/facts/`); los estados sin
+dato muestran una imagen genérica y un texto provisorio.
+
 El logo (`src/assets/logo.svg`) y la imagen de fondo
 (`src/assets/home-bg.svg`) son una propuesta: para cambiarlos basta con
 reemplazar esos archivos (pueden ser PNG/JPG ajustando la ruta en
@@ -174,11 +180,12 @@ npm run build:map
 usaplates/
 ├── index.html               # página única de la app
 ├── src/
-│   ├── assets/              # logo.svg y home-bg.svg (propuesta)
+│   ├── assets/              # logo, fondo de inicio e imágenes de los datos
 │   ├── css/style.css
 │   └── js/
 │       ├── app.js           # orquestación, modal de estado, juego nuevo
 │       ├── home.js          # pantalla de inicio y menú principal
+│       ├── facts.js         # datos desbloqueables por estado y su modal
 │       ├── game.js          # reglas del juego + base de datos local
 │       ├── api.js           # instancia del juego guardada con Preferences
 │       ├── map.js           # mapa SVG + zoom/pan

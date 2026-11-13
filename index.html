@@ -98,6 +98,12 @@
       <p class="modal-question">¿Quién vio esta patente?</p>
       <div class="modal-options" id="modal-options"></div>
 
+      <!-- Reward once every player has spotted this plate. -->
+      <button type="button" class="fact-unlock" id="fact-unlock" hidden>
+        <span class="fact-unlock-icon" aria-hidden="true">🔓</span>
+        ¡Dato desbloqueado!
+      </button>
+
       <!-- One line per player who marked this plate, in the order they did. -->
       <section class="modal-dates" id="modal-dates" aria-labelledby="modal-dates-title" hidden>
         <h3 class="modal-dates-title" id="modal-dates-title">Fechas de avistamiento</h3>
@@ -106,6 +112,17 @@
 
       <p class="modal-empty" id="modal-loading" hidden>Cargando…</p>
       <p class="modal-empty" id="modal-empty">Nadie ha visto todavía una patente de este estado.</p>
+    </div>
+  </div>
+
+  <!-- Interesting fact about a state, unlocked when everyone has seen its plate. -->
+  <div id="fact-backdrop" class="modal-backdrop fact-backdrop" hidden>
+    <div class="modal modal-fact" role="dialog" aria-modal="true" aria-labelledby="fact-title">
+      <button type="button" class="modal-close" id="fact-close" aria-label="Cerrar">&times;</button>
+      <p class="fact-kicker">⭐ Dato desbloqueado</p>
+      <h2 id="fact-title"><span id="fact-state-name">Estado</span></h2>
+      <img class="fact-image" id="fact-image" alt="">
+      <p class="fact-text" id="fact-text"></p>
     </div>
   </div>
 
