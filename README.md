@@ -99,7 +99,7 @@ cambios.
 Con el computador y el iPhone en la misma red:
 
 ```bash
-npm run dev -- --host
+npm run dev:phone
 ```
 
 Vite muestra una dirección `Network: http://192.168.x.x:5173/`; ábrela en
